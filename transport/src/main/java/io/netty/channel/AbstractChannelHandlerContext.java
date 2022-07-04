@@ -488,6 +488,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         final AbstractChannelHandlerContext next = findContextOutbound(MASK_BIND);
         EventExecutor executor = next.executor();
         if (executor.inEventLoop()) {
+            // channel 绑定端口
             next.invokeBind(localAddress, promise);
         } else {
             safeExecute(executor, new Runnable() {
@@ -668,6 +669,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
         final AbstractChannelHandlerContext next = findContextOutbound(MASK_READ);
         EventExecutor executor = next.executor();
         if (executor.inEventLoop()) {
+            // 执行可读事件
             next.invokeRead();
         } else {
             Tasks tasks = next.invokeTasks;
@@ -683,6 +685,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     private void invokeRead() {
         if (invokeHandler()) {
             try {
+                // 注册可读事件
                 ((ChannelOutboundHandler) handler()).read(this);
             } catch (Throwable t) {
                 invokeExceptionCaught(t);

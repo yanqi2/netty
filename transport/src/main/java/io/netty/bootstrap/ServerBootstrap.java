@@ -127,11 +127,18 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         return this;
     }
 
+
+    /**
+     * 最重要的是将 ServerBootstrapAcceptor 添加到 handler 中
+     * @param channel
+     */
     @Override
     void init(Channel channel) {
+        // 设置属性
         setChannelOptions(channel, newOptionsArray(), logger);
         setAttributes(channel, newAttributesArray());
 
+        // 过滤器
         ChannelPipeline p = channel.pipeline();
 
         final EventLoopGroup currentChildGroup = childGroup;
@@ -139,6 +146,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         final Entry<ChannelOption<?>, Object>[] currentChildOptions = newOptionsArray(childOptions);
         final Entry<AttributeKey<?>, Object>[] currentChildAttrs = newAttributesArray(childAttrs);
 
+        // 设置 serverSocketChannel 的处理链
         p.addLast(new ChannelInitializer<Channel>() {
             @Override
             public void initChannel(final Channel ch) {
@@ -148,6 +156,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
                     pipeline.addLast(handler);
                 }
 
+                // BossEventLoop，设置接收 Acceptor
                 ch.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {
@@ -212,9 +221,11 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             setAttributes(child, childAttrs);
 
             try {
+                // 将客户端 SocketChannel 注册到 workerGroup 中
                 childGroup.register(child).addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
+                        // 注册失败关闭 channel
                         if (!future.isSuccess()) {
                             forceClose(child, future.cause());
                         }

@@ -52,11 +52,12 @@ public final class HttpHelloWorldServer {
         try {
             ServerBootstrap b = new ServerBootstrap();
             b.option(ChannelOption.SO_BACKLOG, 1024);
-            b.group(bossGroup, workerGroup)
-             .channel(NioServerSocketChannel.class)
-             .handler(new LoggingHandler(LogLevel.INFO))
-             .childHandler(new HttpHelloWorldServerInitializer(sslCtx));
+            b.group(bossGroup, workerGroup)  // 设置 eventLoopGroup
+             .channel(NioServerSocketChannel.class)  // 设置 ServerSocketChannel
+             .handler(new LoggingHandler(LogLevel.INFO))  // 设置 ServerSocketChannel 数据处理的 handler
+             .childHandler(new HttpHelloWorldServerInitializer(sslCtx));  // 设置SocketChannel 数据处理的 handler
 
+            // 上边都是设置，这里才真正的绑定端口，监听网络请求
             Channel ch = b.bind(PORT).sync().channel();
 
             System.err.println("Open your web browser and navigate to " +

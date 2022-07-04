@@ -62,21 +62,25 @@ public class ResourceLeakDetector<T> {
         /**
          * Disables resource leak detection.
          */
+        // 禁用
         DISABLED,
         /**
          * Enables simplistic sampling resource leak detection which reports there is a leak or not,
          * at the cost of small overhead (default).
          */
+        // 随机采样，只告诉有没有泄露，没有打印泄露的cause
         SIMPLE,
         /**
          * Enables advanced sampling resource leak detection which reports where the leaked object was accessed
          * recently at the cost of high overhead.
          */
+        // 随机采样，会打印泄露的cause
         ADVANCED,
         /**
          * Enables paranoid resource leak detection which reports where the leaked object was accessed recently,
          * at the cost of the highest possible overhead (for testing purposes only).
          */
+        // 完全采样，会打印泄露的cause
         PARANOID;
 
         /**

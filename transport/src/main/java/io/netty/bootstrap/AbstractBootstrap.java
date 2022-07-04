@@ -269,16 +269,23 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     private ChannelFuture doBind(final SocketAddress localAddress) {
+        // 初始化 serverSocket 将 serverSocket 注册到 select 中，异步执行
         final ChannelFuture regFuture = initAndRegister();
+
+        // 拿到 serverSocketChannel
         final Channel channel = regFuture.channel();
         if (regFuture.cause() != null) {
             return regFuture;
         }
 
+        // 异步任务执行完成，即 serverSocketChannel 初始化完成
         if (regFuture.isDone()) {
             // At this point we know that the registration was complete and successful.
             ChannelPromise promise = channel.newPromise();
+            // 注册完成了，开始绑定端口号
             doBind0(regFuture, channel, localAddress, promise);
+
+            // 返回的是是否绑定成功的 promise
             return promise;
         } else {
             // Registration future is almost always fulfilled already, but just in case it's not.
@@ -307,7 +314,13 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     final ChannelFuture initAndRegister() {
         Channel channel = null;
         try {
-            channel = channelFactory.newChannel();
+            // channel is NioServerSocketChannel
+            /** channelFactory 来源
+             * 通过 b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class) 设置
+             * ReflectiveChannelFactory 反射工厂
+             */
+            channel = channelFactory.newChannel();  // NioServerSocketChannel
+            // 初始化 serverSocketChannel
             init(channel);
         } catch (Throwable t) {
             if (channel != null) {
@@ -320,8 +333,10 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             return new DefaultChannelPromise(new FailedChannel(), GlobalEventExecutor.INSTANCE).setFailure(t);
         }
 
+        // 注册 serverSocketChannel，先不监听 accept 事件
         ChannelFuture regFuture = config().group().register(channel);
         if (regFuture.cause() != null) {
+            // 如果出现异常，就关闭 serverSocketChannel
             if (channel.isRegistered()) {
                 channel.close();
             } else {
@@ -353,8 +368,11 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             @Override
             public void run() {
                 if (regFuture.isSuccess()) {
-                    channel.bind(localAddress, promise).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+                    // 注册成功，绑定端口号
+                    channel.bind(localAddress, promise)
+                            .addListener(ChannelFutureListener.CLOSE_ON_FAILURE);  // 添加 listener，失败时关闭 channel
                 } else {
+                    // 注册失败，promise 设为失败
                     promise.setFailure(regFuture.cause());
                 }
             }

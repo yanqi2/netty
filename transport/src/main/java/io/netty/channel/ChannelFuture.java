@@ -162,6 +162,8 @@ import java.util.concurrent.TimeUnit;
  * }
  * </pre>
  */
+
+// 在 future 基础上增加了 listener
 public interface ChannelFuture extends Future<Void> {
 
     /**
